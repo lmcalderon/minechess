@@ -1,8 +1,9 @@
 # LLM Chess
 
 A human plays White against an OpenAI model playing Black. The model is fully responsible for
-move generation. The backend never runs a chess engine of its own; the only chess-legality logic
-in the whole system is [chess.js](https://github.com/jhlywa/chess.js) running in the browser.
+move generation. The backend never runs a chess engine of its own.
+[chess.js](https://github.com/jhlywa/chess.js), running in the browser, is the only thing in the
+system that knows what a legal move is.
 
 Full spec in [PRD.md](./PRD.md).
 
