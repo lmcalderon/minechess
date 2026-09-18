@@ -20,9 +20,9 @@ function movePairs(history: string[]) {
 function describeGameOver(game: Chess): string | null {
   if (!game.isGameOver()) return null
   if (game.isCheckmate()) return `Checkmate — ${game.turn() === 'w' ? 'Black' : 'White'} wins`
-  if (game.isStalemate()) return 'Draw — stalemate'
-  if (game.isThreefoldRepetition()) return 'Draw — threefold repetition'
-  if (game.isInsufficientMaterial()) return 'Draw — insufficient material'
+  if (game.isStalemate()) return 'Draw by stalemate'
+  if (game.isThreefoldRepetition()) return 'Draw by threefold repetition'
+  if (game.isInsufficientMaterial()) return 'Draw by insufficient material'
   if (game.isDraw()) return 'Draw'
   return 'Game over'
 }
@@ -79,57 +79,86 @@ function App() {
     return true
   }
 
+  function newGame() {
+    gameRef.current = new Chess()
+    setFen(gameRef.current.fen())
+    setHistory([])
+    setBanter(null)
+    setStatus('idle')
+    setErrorMessage(null)
+  }
+
   const gameOverMessage = describeGameOver(gameRef.current)
   const gameStarted = history.length > 0
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100">
-      <header className="border-b border-slate-800 px-6 py-4">
-        <h1 className="text-xl font-semibold tracking-tight">LLM Chess</h1>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <header className="border-b border-slate-800/80 px-6 py-4">
+        <div className="mx-auto flex max-w-5xl items-baseline gap-3">
+          <h1 className="text-xl font-semibold tracking-tight">LLM Chess</h1>
+          <span className="text-sm text-slate-500">You play White. OpenAI plays Black.</span>
+        </div>
       </header>
 
-      <main className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:flex-row">
+      <main className="mx-auto flex max-w-5xl flex-col gap-6 p-6 sm:flex-row sm:items-start">
         <section className="w-full max-w-xl">
-          <div className="mb-3 flex items-start gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-700 text-sm font-semibold">
+          <div className="mb-3 flex min-h-[3rem] items-start gap-2">
+            <div
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                status === 'thinking' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'
+              }`}
+            >
               {difficulty[0]}
             </div>
             {banter && (
-              <div className="rounded-lg rounded-tl-none bg-slate-800 px-3 py-2 text-sm text-slate-200">{banter}</div>
+              <div className="relative rounded-lg rounded-tl-none bg-slate-800 px-3 py-2 text-sm text-slate-200 shadow-sm">
+                {banter}
+              </div>
             )}
           </div>
 
-          <Chessboard
-            options={{
-              position: fen,
-              onPieceDrop,
-              boardOrientation: 'white',
-              boardStyle: { height: 'auto', aspectRatio: '1/1', gridTemplateRows: 'repeat(8, 1fr)' },
-              squareStyle: { aspectRatio: 'auto', height: '100%' },
-              canDragPiece: ({ piece }) =>
-                !gameRef.current.isGameOver() &&
-                status !== 'thinking' &&
-                piece.pieceType.startsWith('w') &&
-                gameRef.current.turn() === 'w',
-              id: 'main-board',
-            }}
-          />
+          <div className="overflow-hidden rounded-xl shadow-xl shadow-black/30 ring-1 ring-slate-800">
+            <Chessboard
+              options={{
+                position: fen,
+                onPieceDrop,
+                boardOrientation: 'white',
+                boardStyle: { height: 'auto', aspectRatio: '1/1', gridTemplateRows: 'repeat(8, 1fr)' },
+                squareStyle: { aspectRatio: 'auto', height: '100%' },
+                canDragPiece: ({ piece }) =>
+                  !gameRef.current.isGameOver() &&
+                  status !== 'thinking' &&
+                  piece.pieceType.startsWith('w') &&
+                  gameRef.current.turn() === 'w',
+                id: 'main-board',
+              }}
+            />
+          </div>
 
-          <div className="mt-3 h-5 text-sm">
-            {status === 'thinking' && <span className="text-slate-400">LLM is thinking…</span>}
-            {gameOverMessage && <span className="text-slate-200">{gameOverMessage}</span>}
+          <div className="mt-3 min-h-[1.5rem] text-sm">
+            {status === 'thinking' && (
+              <span className="inline-flex items-center gap-1.5 text-slate-400">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                LLM is thinking…
+              </span>
+            )}
+            {gameOverMessage && (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-900/40 px-2 py-1 font-medium text-emerald-300">
+                {gameOverMessage}
+              </span>
+            )}
             {status === 'error' && errorMessage && <span className="text-red-400">{errorMessage}</span>}
           </div>
         </section>
 
-        <aside className="flex w-full flex-col gap-4 rounded-lg bg-slate-800 p-4 sm:w-64">
-          <label className="flex flex-col gap-1 text-sm text-slate-400">
+        <aside className="flex w-full flex-col gap-5 rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800 sm:w-64">
+          <label className="flex flex-col gap-1.5 text-sm text-slate-400">
             Difficulty
             <select
               value={difficulty}
               onChange={(e) => setDifficulty(e.target.value as Difficulty)}
               disabled={gameStarted}
-              className="rounded-md border border-slate-700 bg-slate-900 px-2 py-1 text-slate-100 disabled:opacity-50"
+              className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-slate-100 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 disabled:opacity-50"
             >
               {DIFFICULTIES.map((level) => (
                 <option key={level} value={level}>
@@ -139,16 +168,25 @@ function App() {
             </select>
           </label>
 
-          <div className="flex flex-col gap-1 overflow-y-auto text-sm">
-            <span className="text-slate-400">Moves</span>
+          <div className="flex flex-1 flex-col gap-1 overflow-y-auto font-mono text-sm">
+            <span className="mb-1 font-sans text-slate-400">Moves</span>
             {movePairs(history).map(({ moveNumber, white, black }) => (
-              <div key={moveNumber} className="flex gap-2">
+              <div key={moveNumber} className="flex gap-2 rounded px-1 py-0.5 odd:bg-slate-800/40">
                 <span className="w-5 text-slate-500">{moveNumber}.</span>
                 <span className="w-14">{white}</span>
                 <span className="w-14">{black ?? ''}</span>
               </div>
             ))}
+            {history.length === 0 && <span className="font-sans text-slate-600">No moves yet.</span>}
           </div>
+
+          <button
+            type="button"
+            onClick={newGame}
+            className="rounded-md border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-300 transition-colors hover:border-emerald-600 hover:text-emerald-400"
+          >
+            New game
+          </button>
         </aside>
       </main>
     </div>
