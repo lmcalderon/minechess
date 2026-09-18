@@ -35,6 +35,11 @@ export async function getLlmMove(params: {
         schema: {
           type: "object",
           properties: {
+            analysis: {
+              type: "string",
+              description:
+                "Brief analysis (2-4 sentences) of the position before deciding: material, threats, tactics, and why you're picking your move over the other candidates in the legal move list. Think it through here first.",
+            },
             move: {
               type: "string",
               enum: legalMoves,
@@ -45,7 +50,7 @@ export async function getLlmMove(params: {
               description: "A short, in-character remark about the move or the game, matching your assigned personality.",
             },
           },
-          required: ["move", "banter"],
+          required: ["analysis", "move", "banter"],
           additionalProperties: false,
         },
       },
@@ -57,5 +62,6 @@ export async function getLlmMove(params: {
     throw new Error("OpenAI response had no content");
   }
 
-  return JSON.parse(content) as { move: string; banter: string };
+  const parsed = JSON.parse(content) as { analysis: string; move: string; banter: string };
+  return { move: parsed.move, banter: parsed.banter };
 }

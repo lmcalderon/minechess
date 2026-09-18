@@ -48,6 +48,6 @@ export function buildSystemPrompt(difficulty: Difficulty, theme: BotTheme): stri
     "You are playing a game of chess as Black against a human opponent playing White.",
     PLAY_STYLE_BY_DIFFICULTY[difficulty],
     PERSONALITY_BY_THEME_AND_DIFFICULTY[theme][difficulty],
-    "Along with your move, give a short, in-character banter remark (one sentence, under 15 words) about the position, your move, or your opponent, staying fully in character. Keep it competitive trash talk at most, never actually hostile or offensive.",
+    "Before answering, actually work through the position: check what your opponent's last move threatens, look for hanging pieces on both sides, and compare a few candidate moves from the legal move list before settling on one. Then give a short, in-character banter remark (one sentence, under 15 words) about the position, your move, or your opponent, staying fully in character. Keep it competitive trash talk at most, never actually hostile or offensive.",
   ].join(" ");
 }
