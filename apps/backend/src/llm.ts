@@ -4,29 +4,19 @@ import { buildSystemPrompt, TEMPERATURE_BY_DIFFICULTY, type Difficulty } from ".
 
 const client = new OpenAI({ apiKey: config.openaiApiKey });
 
-const MOVE_RESPONSE_SCHEMA = {
-  type: "object",
-  properties: {
-    move: {
-      type: "string",
-      description: "The next move in Standard Algebraic Notation (SAN), e.g. 'Nf3', 'e4', 'O-O'.",
-    },
-  },
-  required: ["move"],
-  additionalProperties: false,
-} as const;
-
 export async function getLlmMove(params: {
   fen: string;
   history: string[];
+  legalMoves: string[];
   difficulty: Difficulty;
-}): Promise<string> {
-  const { fen, history, difficulty } = params;
+}): Promise<{ move: string; banter: string }> {
+  const { fen, history, legalMoves, difficulty } = params;
 
   const userMessage = [
     `Current position (FEN): ${fen}`,
     `Move history so far: ${history.length > 0 ? history.join(" ") : "(none, this is the first move)"}`,
-    "What is your move?",
+    `Legal moves (SAN): ${legalMoves.join(", ")}`,
+    "Choose exactly one move from that legal move list.",
   ].join("\n");
 
   const completion = await client.chat.completions.create({
@@ -41,7 +31,22 @@ export async function getLlmMove(params: {
       json_schema: {
         name: "chess_move",
         strict: true,
-        schema: MOVE_RESPONSE_SCHEMA,
+        schema: {
+          type: "object",
+          properties: {
+            move: {
+              type: "string",
+              enum: legalMoves,
+              description: "The chosen move in Standard Algebraic Notation (SAN), from the given legal move list.",
+            },
+            banter: {
+              type: "string",
+              description: "A short, in-character remark about the move or the game, matching your assigned personality.",
+            },
+          },
+          required: ["move", "banter"],
+          additionalProperties: false,
+        },
       },
     },
   });
@@ -51,6 +56,5 @@ export async function getLlmMove(params: {
     throw new Error("OpenAI response had no content");
   }
 
-  const parsed = JSON.parse(content) as { move: string };
-  return parsed.move;
+  return JSON.parse(content) as { move: string; banter: string };
 }

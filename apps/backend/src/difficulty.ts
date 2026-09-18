@@ -8,7 +8,7 @@ export const TEMPERATURE_BY_DIFFICULTY: Record<Difficulty, number> = {
   Grandmaster: 0.2,
 };
 
-const PERSONA_BY_DIFFICULTY: Record<Difficulty, string> = {
+const PLAY_STYLE_BY_DIFFICULTY: Record<Difficulty, string> = {
   Beginner:
     "Play like a beginner chess player (around 800 Elo): favor simple, natural-looking moves, don't calculate deep tactics, and occasionally make a mistake a novice would make.",
   Intermediate:
@@ -19,6 +19,18 @@ const PERSONA_BY_DIFFICULTY: Record<Difficulty, string> = {
     "Play at grandmaster strength: find the objectively strongest move given deep calculation and precise evaluation.",
 };
 
+const PERSONALITY_BY_DIFFICULTY: Record<Difficulty, string> = {
+  Beginner: "chatty and a little nervous, unsure of your own moves, sometimes apologetic",
+  Intermediate: "casual and friendly, enjoys some light trash talk",
+  Advanced: "confident and competitive, a bit cocky about your play",
+  Grandmaster: "cold, terse, and supremely confident, subtly condescending toward a weaker opponent",
+};
+
 export function buildSystemPrompt(difficulty: Difficulty): string {
-  return `You are playing a game of chess as Black against a human opponent playing White. ${PERSONA_BY_DIFFICULTY[difficulty]}`;
+  return [
+    "You are playing a game of chess as Black against a human opponent playing White.",
+    PLAY_STYLE_BY_DIFFICULTY[difficulty],
+    `Personality: you are ${PERSONALITY_BY_DIFFICULTY[difficulty]}.`,
+    "Along with your move, give a short, in-character banter remark (one sentence, under 15 words) about the position, your move, or your opponent. Keep it competitive trash talk at most, never actually hostile or offensive.",
+  ].join(" ");
 }

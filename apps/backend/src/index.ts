@@ -12,26 +12,27 @@ app.get("/health", async () => {
   return { ok: true };
 });
 
-app.post<{ Body: { fen: string; history: string[]; difficulty: Difficulty } }>(
+app.post<{ Body: { fen: string; history: string[]; legalMoves: string[]; difficulty: Difficulty } }>(
   "/api/move",
   {
     schema: {
       body: {
         type: "object",
-        required: ["fen", "history", "difficulty"],
+        required: ["fen", "history", "legalMoves", "difficulty"],
         properties: {
           fen: { type: "string" },
           history: { type: "array", items: { type: "string" } },
+          legalMoves: { type: "array", items: { type: "string" }, minItems: 1 },
           difficulty: { type: "string", enum: DIFFICULTIES },
         },
       },
     },
   },
   async (request, reply) => {
-    const { fen, history, difficulty } = request.body;
+    const { fen, history, legalMoves, difficulty } = request.body;
     try {
-      const move = await getLlmMove({ fen, history, difficulty });
-      return { move };
+      const { move, banter } = await getLlmMove({ fen, history, legalMoves, difficulty });
+      return { move, banter };
     } catch (err) {
       app.log.error(err);
       reply.code(502);
