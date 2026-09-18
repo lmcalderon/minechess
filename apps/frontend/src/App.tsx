@@ -24,7 +24,7 @@ function imagePiece(src: string) {
   return () => <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
 }
 
-// Black pieces aren't reskinned yet (Illager set pending) — merged onto defaultPieces
+// Black pieces aren't reskinned yet (Illager set pending). Merged onto defaultPieces
 // below so Black keeps rendering the library's built-in SVG pieces.
 const MINECRAFT_WHITE_PIECES = {
   wP: imagePiece(mcPawnWhite),
@@ -83,7 +83,7 @@ function movePairs(history: string[]) {
 
 function describeGameOver(game: Chess): string | null {
   if (!game.isGameOver()) return null
-  if (game.isCheckmate()) return `Checkmate — ${game.turn() === 'w' ? 'Black' : 'White'} wins`
+  if (game.isCheckmate()) return `Checkmate. ${game.turn() === 'w' ? 'Black' : 'White'} wins.`
   if (game.isStalemate()) return 'Draw by stalemate'
   if (game.isThreefoldRepetition()) return 'Draw by threefold repetition'
   if (game.isInsufficientMaterial()) return 'Draw by insufficient material'
