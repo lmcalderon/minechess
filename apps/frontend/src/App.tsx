@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { Chess } from 'chess.js'
-import { Chessboard } from 'react-chessboard'
+import { Chessboard, defaultPieces } from 'react-chessboard'
 import type { PieceDropHandlerArgs } from 'react-chessboard'
 import { requestLlmMove } from './api'
 import lightSquareTexture from './assets/textures/stripped_spruce_log.png'
@@ -13,6 +13,27 @@ import mcBeginnerAvatar from './assets/avatars-minecraft/beginner.png'
 import mcIntermediateAvatar from './assets/avatars-minecraft/intermediate.png'
 import mcAdvancedAvatar from './assets/avatars-minecraft/advanced.png'
 import mcGrandmasterAvatar from './assets/avatars-minecraft/grandmaster.png'
+import mcPawnWhite from './assets/pieces-minecraft/white/pawn.png'
+import mcKnightWhite from './assets/pieces-minecraft/white/knight.png'
+import mcBishopWhite from './assets/pieces-minecraft/white/bishop.png'
+import mcRookWhite from './assets/pieces-minecraft/white/rook.png'
+import mcQueenWhite from './assets/pieces-minecraft/white/queen.png'
+import mcKingWhite from './assets/pieces-minecraft/white/king.png'
+
+function imagePiece(src: string) {
+  return () => <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+}
+
+// Black pieces aren't reskinned yet (Illager set pending) — merged onto defaultPieces
+// below so Black keeps rendering the library's built-in SVG pieces.
+const MINECRAFT_WHITE_PIECES = {
+  wP: imagePiece(mcPawnWhite),
+  wN: imagePiece(mcKnightWhite),
+  wB: imagePiece(mcBishopWhite),
+  wR: imagePiece(mcRookWhite),
+  wQ: imagePiece(mcQueenWhite),
+  wK: imagePiece(mcKingWhite),
+}
 
 const DIFFICULTIES = ['Beginner', 'Intermediate', 'Advanced', 'Grandmaster'] as const
 type Difficulty = (typeof DIFFICULTIES)[number]
@@ -182,6 +203,7 @@ function App() {
                         backgroundSize: 'cover',
                         imageRendering: 'pixelated' as const,
                       },
+                      pieces: { ...defaultPieces, ...MINECRAFT_WHITE_PIECES },
                     }
                   : {}),
                 canDragPiece: ({ piece }) =>
