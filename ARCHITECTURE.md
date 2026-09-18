@@ -36,9 +36,10 @@ flowchart LR
 ```
 
 Everything left of the backend can veto a move. Everything right of it can't. That empty
-`∅ no chess library` box isn't an oversight, it's what keeps the LLM fully responsible for move
-generation, not a chess engine hiding server-side. Removing that constraint would mean building a
-second, independent legality checker in the backend, and one more place for the two to disagree.
+`∅ no chess library` box is deliberate: it's what keeps the LLM fully responsible for move
+generation, rather than a chess engine hiding server-side. Removing that constraint would mean
+building a second, independent legality checker in the backend, and one more place for the two to
+disagree.
 
 ## Anatomy of one move
 
