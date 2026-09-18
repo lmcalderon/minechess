@@ -9,15 +9,37 @@ import beginnerAvatar from './assets/avatars/beginner.png'
 import intermediateAvatar from './assets/avatars/intermediate.png'
 import advancedAvatar from './assets/avatars/advanced.png'
 import grandmasterAvatar from './assets/avatars/grandmaster.png'
+import mcBeginnerAvatar from './assets/avatars-minecraft/beginner.png'
+import mcIntermediateAvatar from './assets/avatars-minecraft/intermediate.png'
+import mcAdvancedAvatar from './assets/avatars-minecraft/advanced.png'
+import mcGrandmasterAvatar from './assets/avatars-minecraft/grandmaster.png'
 
 const DIFFICULTIES = ['Beginner', 'Intermediate', 'Advanced', 'Grandmaster'] as const
 type Difficulty = (typeof DIFFICULTIES)[number]
 
-const DIFFICULTY_META: Record<Difficulty, { avatar: string; blurb: string }> = {
-  Beginner: { avatar: beginnerAvatar, blurb: 'Nervous and a little unsure. Expect genuine beginner mistakes.' },
-  Intermediate: { avatar: intermediateAvatar, blurb: 'Casual and friendly, with some light trash talk.' },
-  Advanced: { avatar: advancedAvatar, blurb: 'Confident and competitive. Sharp tactics, a bit cocky about it.' },
-  Grandmaster: { avatar: grandmasterAvatar, blurb: 'Cold, terse, and supremely confident. Plays the strongest move it can find.' },
+const BOT_THEMES = ['Default', 'Minecraft'] as const
+type BotTheme = (typeof BOT_THEMES)[number]
+
+const DIFFICULTY_BLURB: Record<Difficulty, string> = {
+  Beginner: 'Nervous and a little unsure. Expect genuine beginner mistakes.',
+  Intermediate: 'Casual and friendly, with some light trash talk.',
+  Advanced: 'Confident and competitive. Sharp tactics, a bit cocky about it.',
+  Grandmaster: 'Cold, terse, and supremely confident. Plays the strongest move it can find.',
+}
+
+const AVATARS_BY_THEME: Record<BotTheme, Record<Difficulty, string>> = {
+  Default: {
+    Beginner: beginnerAvatar,
+    Intermediate: intermediateAvatar,
+    Advanced: advancedAvatar,
+    Grandmaster: grandmasterAvatar,
+  },
+  Minecraft: {
+    Beginner: mcBeginnerAvatar,
+    Intermediate: mcIntermediateAvatar,
+    Advanced: mcAdvancedAvatar,
+    Grandmaster: mcGrandmasterAvatar,
+  },
 }
 
 type Status = 'idle' | 'thinking' | 'error'
@@ -45,6 +67,7 @@ function App() {
   const [fen, setFen] = useState(gameRef.current.fen())
   const [history, setHistory] = useState<string[]>([])
   const [difficulty, setDifficulty] = useState<Difficulty>('Beginner')
+  const [theme, setTheme] = useState<BotTheme>('Default')
   const [status, setStatus] = useState<Status>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [banter, setBanter] = useState<string | null>(null)
@@ -121,7 +144,7 @@ function App() {
                 status === 'thinking' ? 'ring-emerald-500' : 'ring-transparent'
               }`}
             >
-              <img src={DIFFICULTY_META[difficulty].avatar} alt="" className="h-full w-full object-cover" />
+              <img src={AVATARS_BY_THEME[theme][difficulty]} alt="" className="h-full w-full object-cover" />
             </div>
             {banter && (
               <div className="relative rounded-lg rounded-tl-none bg-slate-800 px-3 py-2 text-sm text-slate-200 shadow-sm">
@@ -138,16 +161,20 @@ function App() {
                 boardOrientation: 'white',
                 boardStyle: { height: 'auto', aspectRatio: '1/1', gridTemplateRows: 'repeat(8, 1fr)' },
                 squareStyle: { aspectRatio: 'auto', height: '100%' },
-                lightSquareStyle: {
-                  backgroundImage: `url(${lightSquareTexture})`,
-                  backgroundSize: 'cover',
-                  imageRendering: 'pixelated',
-                },
-                darkSquareStyle: {
-                  backgroundImage: `url(${darkSquareTexture})`,
-                  backgroundSize: 'cover',
-                  imageRendering: 'pixelated',
-                },
+                ...(theme === 'Minecraft'
+                  ? {
+                      lightSquareStyle: {
+                        backgroundImage: `url(${lightSquareTexture})`,
+                        backgroundSize: 'cover',
+                        imageRendering: 'pixelated' as const,
+                      },
+                      darkSquareStyle: {
+                        backgroundImage: `url(${darkSquareTexture})`,
+                        backgroundSize: 'cover',
+                        imageRendering: 'pixelated' as const,
+                      },
+                    }
+                  : {}),
                 canDragPiece: ({ piece }) =>
                   !gameRef.current.isGameOver() &&
                   status !== 'thinking' &&
@@ -176,6 +203,25 @@ function App() {
 
         <aside className="flex w-full flex-col gap-5 rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800 sm:w-64">
           <div className="flex flex-col gap-1.5 text-sm text-slate-400">
+            Bot theme
+            <div className="inline-flex w-fit rounded-md border border-slate-700 bg-slate-950 p-0.5">
+              {BOT_THEMES.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTheme(t)}
+                  aria-pressed={theme === t}
+                  className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
+                    theme === t ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 text-sm text-slate-400">
             Difficulty
             <div className="flex gap-2">
               {DIFFICULTIES.map((level, index) => {
@@ -194,12 +240,12 @@ function App() {
                       onClick={() => setDifficulty(level)}
                       disabled={gameStarted}
                       aria-pressed={selected}
-                      aria-label={`${level}: ${DIFFICULTY_META[level].blurb}`}
+                      aria-label={`${level}: ${DIFFICULTY_BLURB[level]}`}
                       className={`h-12 w-12 overflow-hidden rounded-full border-2 bg-slate-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                         selected ? 'border-emerald-500' : 'border-slate-700 hover:border-slate-500'
                       }`}
                     >
-                      <img src={DIFFICULTY_META[level].avatar} alt="" className="h-full w-full object-cover" />
+                      <img src={AVATARS_BY_THEME[theme][level]} alt="" className="h-full w-full object-cover" />
                     </button>
 
                     <div
@@ -207,7 +253,7 @@ function App() {
                       className={`pointer-events-none absolute top-full z-10 mt-2 w-48 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-2 text-xs opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${tooltipPosition}`}
                     >
                       <div className="font-semibold text-slate-100">{level}</div>
-                      <div className="mt-0.5 text-slate-400">{DIFFICULTY_META[level].blurb}</div>
+                      <div className="mt-0.5 text-slate-400">{DIFFICULTY_BLURB[level]}</div>
                     </div>
                   </div>
                 )
