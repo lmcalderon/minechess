@@ -20,11 +20,19 @@ type Difficulty = (typeof DIFFICULTIES)[number]
 const BOT_THEMES = ['Default', 'Minecraft'] as const
 type BotTheme = (typeof BOT_THEMES)[number]
 
-const DIFFICULTY_BLURB: Record<Difficulty, string> = {
-  Beginner: 'Nervous and a little unsure. Expect genuine beginner mistakes.',
-  Intermediate: 'Casual and friendly, with some light trash talk.',
-  Advanced: 'Confident and competitive. Sharp tactics, a bit cocky about it.',
-  Grandmaster: 'Cold, terse, and supremely confident. Plays the strongest move it can find.',
+const BLURB_BY_THEME: Record<BotTheme, Record<Difficulty, string>> = {
+  Default: {
+    Beginner: 'Nervous and a little unsure. Expect genuine beginner mistakes.',
+    Intermediate: 'Casual and friendly, with some light trash talk.',
+    Advanced: 'Confident and competitive. Sharp tactics, a bit cocky about it.',
+    Grandmaster: 'Cold, terse, and supremely confident. Plays the strongest move it can find.',
+  },
+  Minecraft: {
+    Beginner: 'A jittery chicken. Nervous, easily startled, and prone to real beginner mistakes.',
+    Intermediate: 'A friendly, sociable villager. Casual play with some light trash talk.',
+    Advanced: 'A cocky, swaggering piglin. Sharp tactics and plenty of attitude.',
+    Grandmaster: 'A silent, patient creeper. Cold and terse, then suddenly devastating.',
+  },
 }
 
 const AVATARS_BY_THEME: Record<BotTheme, Record<Difficulty, string>> = {
@@ -83,6 +91,7 @@ function App() {
         history: game.history(),
         legalMoves: game.moves(),
         difficulty,
+        theme,
       })
       game.move(move)
       setFen(game.fen())
@@ -240,7 +249,7 @@ function App() {
                       onClick={() => setDifficulty(level)}
                       disabled={gameStarted}
                       aria-pressed={selected}
-                      aria-label={`${level}: ${DIFFICULTY_BLURB[level]}`}
+                      aria-label={`${level}: ${BLURB_BY_THEME[theme][level]}`}
                       className={`h-12 w-12 overflow-hidden rounded-full border-2 bg-slate-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                         selected ? 'border-emerald-500' : 'border-slate-700 hover:border-slate-500'
                       }`}
@@ -253,7 +262,7 @@ function App() {
                       className={`pointer-events-none absolute top-full z-10 mt-2 w-48 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-2 text-xs opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${tooltipPosition}`}
                     >
                       <div className="font-semibold text-slate-100">{level}</div>
-                      <div className="mt-0.5 text-slate-400">{DIFFICULTY_BLURB[level]}</div>
+                      <div className="mt-0.5 text-slate-400">{BLURB_BY_THEME[theme][level]}</div>
                     </div>
                   </div>
                 )

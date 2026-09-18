@@ -5,6 +5,7 @@ export async function requestLlmMove(params: {
   history: string[]
   legalMoves: string[]
   difficulty: string
+  theme: string
 }): Promise<{ move: string; banter: string }> {
   const res = await fetch(`${API_BASE_URL}/api/move`, {
     method: 'POST',

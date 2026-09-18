@@ -1,7 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import { config } from "./config.js";
-import { DIFFICULTIES, type Difficulty } from "./difficulty.js";
+import { BOT_THEMES, DIFFICULTIES, type BotTheme, type Difficulty } from "./difficulty.js";
 import { getLlmMove } from "./llm.js";
 
 const app = Fastify({ logger: true });
@@ -12,26 +12,29 @@ app.get("/health", async () => {
   return { ok: true };
 });
 
-app.post<{ Body: { fen: string; history: string[]; legalMoves: string[]; difficulty: Difficulty } }>(
+app.post<{
+  Body: { fen: string; history: string[]; legalMoves: string[]; difficulty: Difficulty; theme: BotTheme };
+}>(
   "/api/move",
   {
     schema: {
       body: {
         type: "object",
-        required: ["fen", "history", "legalMoves", "difficulty"],
+        required: ["fen", "history", "legalMoves", "difficulty", "theme"],
         properties: {
           fen: { type: "string" },
           history: { type: "array", items: { type: "string" } },
           legalMoves: { type: "array", items: { type: "string" }, minItems: 1 },
           difficulty: { type: "string", enum: DIFFICULTIES },
+          theme: { type: "string", enum: BOT_THEMES },
         },
       },
     },
   },
   async (request, reply) => {
-    const { fen, history, legalMoves, difficulty } = request.body;
+    const { fen, history, legalMoves, difficulty, theme } = request.body;
     try {
-      const { move, banter } = await getLlmMove({ fen, history, legalMoves, difficulty });
+      const { move, banter } = await getLlmMove({ fen, history, legalMoves, difficulty, theme });
       return { move, banter };
     } catch (err) {
       app.log.error(err);

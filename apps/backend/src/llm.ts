@@ -1,6 +1,6 @@
 import OpenAI from "openai";
 import { config } from "./config.js";
-import { buildSystemPrompt, TEMPERATURE_BY_DIFFICULTY, type Difficulty } from "./difficulty.js";
+import { buildSystemPrompt, TEMPERATURE_BY_DIFFICULTY, type BotTheme, type Difficulty } from "./difficulty.js";
 
 const client = new OpenAI({ apiKey: config.openaiApiKey });
 
@@ -9,8 +9,9 @@ export async function getLlmMove(params: {
   history: string[];
   legalMoves: string[];
   difficulty: Difficulty;
+  theme: BotTheme;
 }): Promise<{ move: string; banter: string }> {
-  const { fen, history, legalMoves, difficulty } = params;
+  const { fen, history, legalMoves, difficulty, theme } = params;
 
   const userMessage = [
     `Current position (FEN): ${fen}`,
@@ -23,7 +24,7 @@ export async function getLlmMove(params: {
     model: config.openaiModel,
     temperature: TEMPERATURE_BY_DIFFICULTY[difficulty],
     messages: [
-      { role: "system", content: buildSystemPrompt(difficulty) },
+      { role: "system", content: buildSystemPrompt(difficulty, theme) },
       { role: "user", content: userMessage },
     ],
     response_format: {
