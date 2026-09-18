@@ -3,9 +3,22 @@ import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import type { PieceDropHandlerArgs } from 'react-chessboard'
 import { requestLlmMove } from './api'
+import lightSquareTexture from './assets/textures/stripped_spruce_log.png'
+import darkSquareTexture from './assets/textures/stripped_dark_oak_log.png'
+import beginnerAvatar from './assets/avatars/beginner.png'
+import intermediateAvatar from './assets/avatars/intermediate.png'
+import advancedAvatar from './assets/avatars/advanced.png'
+import grandmasterAvatar from './assets/avatars/grandmaster.png'
 
 const DIFFICULTIES = ['Beginner', 'Intermediate', 'Advanced', 'Grandmaster'] as const
 type Difficulty = (typeof DIFFICULTIES)[number]
+
+const DIFFICULTY_META: Record<Difficulty, { avatar: string; blurb: string }> = {
+  Beginner: { avatar: beginnerAvatar, blurb: 'Nervous and a little unsure. Expect genuine beginner mistakes.' },
+  Intermediate: { avatar: intermediateAvatar, blurb: 'Casual and friendly, with some light trash talk.' },
+  Advanced: { avatar: advancedAvatar, blurb: 'Confident and competitive. Sharp tactics, a bit cocky about it.' },
+  Grandmaster: { avatar: grandmasterAvatar, blurb: 'Cold, terse, and supremely confident. Plays the strongest move it can find.' },
+}
 
 type Status = 'idle' | 'thinking' | 'error'
 
@@ -104,11 +117,11 @@ function App() {
         <section className="w-full max-w-xl">
           <div className="mb-3 flex min-h-[3rem] items-start gap-2">
             <div
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-                status === 'thinking' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300'
+              className={`h-9 w-9 shrink-0 overflow-hidden rounded-full bg-slate-800 ring-2 transition-colors ${
+                status === 'thinking' ? 'ring-emerald-500' : 'ring-transparent'
               }`}
             >
-              {difficulty[0]}
+              <img src={DIFFICULTY_META[difficulty].avatar} alt="" className="h-full w-full object-cover" />
             </div>
             {banter && (
               <div className="relative rounded-lg rounded-tl-none bg-slate-800 px-3 py-2 text-sm text-slate-200 shadow-sm">
@@ -125,6 +138,16 @@ function App() {
                 boardOrientation: 'white',
                 boardStyle: { height: 'auto', aspectRatio: '1/1', gridTemplateRows: 'repeat(8, 1fr)' },
                 squareStyle: { aspectRatio: 'auto', height: '100%' },
+                lightSquareStyle: {
+                  backgroundImage: `url(${lightSquareTexture})`,
+                  backgroundSize: 'cover',
+                  imageRendering: 'pixelated',
+                },
+                darkSquareStyle: {
+                  backgroundImage: `url(${darkSquareTexture})`,
+                  backgroundSize: 'cover',
+                  imageRendering: 'pixelated',
+                },
                 canDragPiece: ({ piece }) =>
                   !gameRef.current.isGameOver() &&
                   status !== 'thinking' &&
@@ -152,21 +175,45 @@ function App() {
         </section>
 
         <aside className="flex w-full flex-col gap-5 rounded-xl bg-slate-900 p-4 ring-1 ring-slate-800 sm:w-64">
-          <label className="flex flex-col gap-1.5 text-sm text-slate-400">
+          <div className="flex flex-col gap-1.5 text-sm text-slate-400">
             Difficulty
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as Difficulty)}
-              disabled={gameStarted}
-              className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1.5 text-slate-100 outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 disabled:opacity-50"
-            >
-              {DIFFICULTIES.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </label>
+            <div className="flex gap-2">
+              {DIFFICULTIES.map((level, index) => {
+                const selected = difficulty === level
+                const isFirst = index === 0
+                const isLast = index === DIFFICULTIES.length - 1
+                const tooltipPosition = isFirst
+                  ? 'left-0'
+                  : isLast
+                    ? 'right-0'
+                    : 'left-1/2 -translate-x-1/2'
+                return (
+                  <div key={level} className="group relative">
+                    <button
+                      type="button"
+                      onClick={() => setDifficulty(level)}
+                      disabled={gameStarted}
+                      aria-pressed={selected}
+                      aria-label={`${level}: ${DIFFICULTY_META[level].blurb}`}
+                      className={`h-12 w-12 overflow-hidden rounded-full border-2 bg-slate-800 transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                        selected ? 'border-emerald-500' : 'border-slate-700 hover:border-slate-500'
+                      }`}
+                    >
+                      <img src={DIFFICULTY_META[level].avatar} alt="" className="h-full w-full object-cover" />
+                    </button>
+
+                    <div
+                      role="tooltip"
+                      className={`pointer-events-none absolute top-full z-10 mt-2 w-48 rounded-md border border-slate-700 bg-slate-800 px-2.5 py-2 text-xs opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 ${tooltipPosition}`}
+                    >
+                      <div className="font-semibold text-slate-100">{level}</div>
+                      <div className="mt-0.5 text-slate-400">{DIFFICULTY_META[level].blurb}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
 
           <div className="flex flex-1 flex-col gap-1 overflow-y-auto font-mono text-sm">
             <span className="mb-1 font-sans text-slate-400">Moves</span>
