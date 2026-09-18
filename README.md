@@ -49,6 +49,22 @@ schema. The `move` field is constrained to an `enum` of exactly the legal moves 
 sent over, so the response is guaranteed playable without the backend ever evaluating chess
 rules itself. Each reply also includes a short line of in-character banter.
 
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Backend
+    participant OpenAI
+
+    Browser->>Backend: POST /api/move<br/>{ fen, history, legalMoves, difficulty }
+    Backend->>OpenAI: chat.completions.create<br/>move.enum = legalMoves
+    OpenAI-->>Backend: { move, banter }
+    Backend-->>Browser: { move, banter }
+```
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full walkthrough: why the backend never runs a
+chess engine, the real bug that led to the `enum` constraint, and how the Minecraft bot theme
+reaches all the way into the LLM's prompt instead of staying a visual skin.
+
 ## Out of scope
 
 Per the PRD: move legality enforcement for the LLM, user accounts, persistence, multiplayer,
