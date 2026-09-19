@@ -80,7 +80,7 @@ flowchart TD
     Theme["Bot theme<br/>Default ↔ Minecraft"]
     Theme --> Avatars["Avatar images<br/>difficulty selector + banter bubble<br/>frontend only"]
     Theme --> Board["Board squares<br/>Minecraft: log textures, pixelated<br/>Default: plain colors<br/>frontend only"]
-    Theme --> Pieces["White piece art<br/>Villager-faction set<br/>Black: not reskinned yet<br/>frontend only"]
+    Theme --> Pieces["Piece art<br/>Villagers vs. Illagers<br/>frontend only"]
     Theme --> Prompt["LLM system prompt<br/>travels in the /api/move request body<br/>reaches OpenAI"]
 
     class Prompt reachesLLM
