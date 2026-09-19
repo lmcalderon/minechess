@@ -94,7 +94,46 @@ Chicken's clucks nervously, instead of both sounding like the same generic chess
 costume. Difficulty is the other axis: theme and difficulty combine to pick both the avatar and
 the exact prompt text.
 
+## Running it on real Kubernetes, locally
+
+Terraform provisions an actual `kind` cluster, not just workloads on one that already exists. It
+builds both Docker images, loads them straight into the cluster's node (no registry involved), and
+deploys everything as real `Deployment`/`Service`/`Secret` resources through Terraform's Kubernetes
+provider, not raw YAML.
+
+```mermaid
+flowchart TD
+    TF["terraform apply"] --> KindProvider["tehcyx/kind provider"]
+    KindProvider --> Cluster
+
+    subgraph Cluster["kind cluster: minechess"]
+        subgraph NS["namespace: minechess"]
+            BD["backend Deployment<br/>node:20-slim, imagePullPolicy: Never"]
+            BS["backend Service<br/>NodePort 30300"]
+            FD["frontend Deployment<br/>nginx:alpine, imagePullPolicy: Never"]
+            FS["frontend Service<br/>NodePort 30173"]
+            Secret["Secret: backend-secrets<br/>OPENAI_API_KEY"]
+            BD --> BS
+            FD --> FS
+            Secret -.->|"envFrom secretKeyRef"| BD
+        end
+    end
+
+    HostBackend["localhost:3000"] -->|"kind extraPortMappings"| BS
+    HostFrontend["localhost:5173"] -->|"kind extraPortMappings"| FS
+    BD -->|"real HTTPS, same as dev"| OpenAI[("OpenAI")]
+```
+
+No ingress controller: `kind`'s `extraPortMappings` map host ports directly onto each Service's
+`NodePort`, so the app answers on the exact same `localhost:3000` / `localhost:5173` addresses as
+the plain `pnpm dev` setup, just backed by real pods instead of dev servers. Images are loaded via
+`kind load docker-image` (a `null_resource` + `local-exec` step, hashed against each app's source
+so it only rebuilds when the code actually changes) rather than pushed to a registry, since there's
+no registry to push to for a laptop-only demo. The backend pod makes the exact same OpenAI call as
+the dev version: this isn't a mock, it's the identical code path reaching the real API from inside
+the cluster.
+
 ---
 
 Source: `apps/frontend/src/App.tsx`, `apps/backend/src/llm.ts`, `apps/backend/src/difficulty.ts`,
-`apps/backend/src/index.ts`.
+`apps/backend/src/index.ts`, `terraform/`.

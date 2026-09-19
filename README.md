@@ -12,6 +12,7 @@ Full spec in [PRD.md](./PRD.md).
 - pnpm workspaces monorepo: `apps/frontend`, `apps/backend`
 - Backend: Fastify + TypeScript, `openai` npm package
 - Frontend: Vite + React + TypeScript, Tailwind CSS, chess.js, react-chessboard
+- Deployment: Docker, Kubernetes, Terraform (local `kind` cluster, see below)
 
 ## Setup
 
@@ -64,6 +65,41 @@ sequenceDiagram
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full walkthrough: why the backend never runs a
 chess engine, the real bug that led to the `enum` constraint, and how the Minecraft bot theme
 reaches all the way into the LLM's prompt instead of staying a visual skin.
+
+## Kubernetes / Terraform (local demo)
+
+The whole app also runs on a real local Kubernetes cluster, provisioned entirely by Terraform: a
+`kind` (Kubernetes-in-Docker) cluster, both apps built as Docker images and loaded into it, and
+deployed as actual `Deployment`/`Service`/`Secret` resources. Not YAML manifests sitting unused in
+the repo. No cloud account, no cost.
+
+Requires Docker (running), [`kind`](https://kind.sigs.k8s.io/), and
+[Terraform](https://developer.hashicorp.com/terraform):
+
+```bash
+brew install kind
+brew tap hashicorp/tap && brew install hashicorp/tap/terraform
+```
+
+Then:
+
+```bash
+cp terraform/terraform.tfvars.example terraform/terraform.tfvars
+# edit terraform.tfvars, add your real OPENAI_API_KEY
+
+cd terraform
+terraform init
+terraform apply
+```
+
+Open http://localhost:5173 exactly like the dev setup: same ports, same app, now served by nginx
+and Fastify running as pods in a real Kubernetes cluster instead of `pnpm dev`. Tear it all down
+with `terraform destroy` when you're done; the full create-destroy-re-create cycle is tested and
+clean.
+
+See [ARCHITECTURE.md](./ARCHITECTURE.md) for the deploy topology diagram and the reasoning behind
+the setup (why Terraform owns the cluster lifecycle, why images are loaded via `kind load` rather
+than a registry, why there's no ingress controller).
 
 ## Out of scope
 
