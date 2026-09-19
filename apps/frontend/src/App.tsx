@@ -19,20 +19,30 @@ import mcBishopWhite from './assets/pieces-minecraft/white/bishop.png'
 import mcRookWhite from './assets/pieces-minecraft/white/rook.png'
 import mcQueenWhite from './assets/pieces-minecraft/white/queen.png'
 import mcKingWhite from './assets/pieces-minecraft/white/king.png'
+import mcPawnBlack from './assets/pieces-minecraft/black/pawn.png'
+import mcKnightBlack from './assets/pieces-minecraft/black/knight.png'
+import mcBishopBlack from './assets/pieces-minecraft/black/bishop.png'
+import mcRookBlack from './assets/pieces-minecraft/black/rook.png'
+import mcQueenBlack from './assets/pieces-minecraft/black/queen.png'
+import mcKingBlack from './assets/pieces-minecraft/black/king.png'
 
 function imagePiece(src: string) {
   return () => <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
 }
 
-// Black pieces aren't reskinned yet (Illager set pending). Merged onto defaultPieces
-// below so Black keeps rendering the library's built-in SVG pieces.
-const MINECRAFT_WHITE_PIECES = {
+const MINECRAFT_PIECES = {
   wP: imagePiece(mcPawnWhite),
   wN: imagePiece(mcKnightWhite),
   wB: imagePiece(mcBishopWhite),
   wR: imagePiece(mcRookWhite),
   wQ: imagePiece(mcQueenWhite),
   wK: imagePiece(mcKingWhite),
+  bP: imagePiece(mcPawnBlack),
+  bN: imagePiece(mcKnightBlack),
+  bB: imagePiece(mcBishopBlack),
+  bR: imagePiece(mcRookBlack),
+  bQ: imagePiece(mcQueenBlack),
+  bK: imagePiece(mcKingBlack),
 }
 
 const DIFFICULTIES = ['Beginner', 'Intermediate', 'Advanced', 'Grandmaster'] as const
@@ -203,7 +213,7 @@ function App() {
                         backgroundSize: 'cover',
                         imageRendering: 'pixelated' as const,
                       },
-                      pieces: { ...defaultPieces, ...MINECRAFT_WHITE_PIECES },
+                      pieces: { ...defaultPieces, ...MINECRAFT_PIECES },
                     }
                   : {}),
                 canDragPiece: ({ piece }) =>
