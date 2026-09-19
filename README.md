@@ -97,6 +97,29 @@ and Fastify running as pods in a real Kubernetes cluster instead of `pnpm dev`. 
 with `terraform destroy` when you're done; the full create-destroy-re-create cycle is tested and
 clean.
 
+**Making a code change after it's already running:** day-to-day development still happens through
+`pnpm dev:backend`/`pnpm dev:frontend`, not this setup, since that's far faster feedback. If you
+specifically want a change reflected in the running Kubernetes deployment:
+
+```bash
+cd terraform
+terraform apply   # rebuilds and reloads whichever image's source actually changed
+```
+
+Both Deployments use a fixed image tag (`minechess-backend:local` / `minechess-frontend:local`)
+rather than a per-build tag, so Kubernetes won't automatically notice the freshly-loaded image and
+restart the pod on its own (from Terraform's point of view, the Deployment's declared image string
+never changed, so `apply` reports no changes to it even though the image content underneath that
+tag did change). One more command forces the pod to pick up the new image:
+
+```bash
+kubectl rollout restart deployment/backend -n minechess    # or deployment/frontend
+```
+
+A real deployment would tag images per build (a git SHA, a timestamp) instead of a static tag, so
+this restart would happen automatically as part of `terraform apply`. Kept simple here since this
+is a local demo, not production.
+
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for the deploy topology diagram and the reasoning behind
 the setup (why Terraform owns the cluster lifecycle, why images are loaded via `kind load` rather
 than a registry, why there's no ingress controller).
