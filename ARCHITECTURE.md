@@ -130,8 +130,8 @@ the plain `pnpm dev` setup, just backed by real pods instead of dev servers. Ima
 `kind load docker-image` (a `null_resource` + `local-exec` step, hashed against each app's source
 so it only rebuilds when the code actually changes) rather than pushed to a registry, since there's
 no registry to push to for a laptop-only demo. The backend pod makes the exact same OpenAI call as
-the dev version: this isn't a mock, it's the identical code path reaching the real API from inside
-the cluster.
+the dev version, the identical code path reaching the real API from inside the cluster, not a
+mocked response.
 
 ---
 

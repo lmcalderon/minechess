@@ -70,8 +70,9 @@ reaches all the way into the LLM's prompt instead of staying a visual skin.
 
 The whole app also runs on a real local Kubernetes cluster, provisioned entirely by Terraform: a
 `kind` (Kubernetes-in-Docker) cluster, both apps built as Docker images and loaded into it, and
-deployed as actual `Deployment`/`Service`/`Secret` resources. Not YAML manifests sitting unused in
-the repo. No cloud account, no cost.
+deployed as actual `Deployment`/`Service`/`Secret` resources that Terraform creates and manages,
+rather than YAML files that just sit in the repo unused. It's all local, so there's no cloud
+account or cost involved.
 
 Requires Docker (running), [`kind`](https://kind.sigs.k8s.io/), and
 [Terraform](https://developer.hashicorp.com/terraform):
