@@ -12,7 +12,7 @@ Full spec in [PRD.md](./PRD.md).
 - pnpm workspaces monorepo: `apps/frontend`, `apps/backend`
 - Backend: Fastify + TypeScript, `openai` npm package
 - Frontend: Vite + React + TypeScript, Tailwind CSS, chess.js, react-chessboard
-- Deployment: Docker, Kubernetes, Terraform (local `kind` cluster, see below)
+- Deployment: Docker, Kubernetes, Terraform (local `kind` cluster and real AWS EKS, see below)
 
 ## Setup
 
@@ -124,6 +124,58 @@ is a local demo, not production.
 See [ARCHITECTURE.md](./ARCHITECTURE.md) for the deploy topology diagram and the reasoning behind
 the setup (why Terraform owns the cluster lifecycle, why images are loaded via `kind load` rather
 than a registry, why there's no ingress controller).
+
+## Real AWS deployment (EKS)
+
+The same app also runs on a real AWS EKS cluster, in a separate `terraform-aws/` Terraform root
+independent from the local `kind` setup above. It reuses almost all the same Kubernetes resources,
+just pointed at a real managed cluster instead of a local one, with images pushed to ECR instead of
+loaded directly into a node.
+
+This is real infrastructure with real cost and real provisioning time, not a quick local demo:
+
+- Takes roughly 15-20 minutes for `terraform apply` to finish (EKS control plane and node group
+  provisioning are slow by nature), so it can't be spun up live during a call.
+- Costs money while running: the EKS control plane alone is $0.10/hour, plus EC2 node(s) and two
+  load balancers on top of that. Apply it shortly before you need it, and `terraform destroy`
+  right after; don't leave it running.
+- `/api/move` has no authentication, matching the rest of the app. On a public AWS load balancer
+  that means anyone who finds the URL could spend your OpenAI quota, so keep the exposure window
+  short and consider a spend limit on the OpenAI dashboard as a safety net.
+
+Requires the AWS CLI configured (`aws configure`) with credentials that can create IAM roles, VPCs,
+and an EKS cluster (`PowerUserAccess` alone isn't enough, since it deliberately excludes IAM role
+creation; `AdministratorAccess` works).
+
+```bash
+cp terraform-aws/terraform.tfvars.example terraform-aws/terraform.tfvars
+# edit terraform.tfvars, add your real OPENAI_API_KEY
+
+cd terraform-aws
+terraform init
+terraform apply
+```
+
+`terraform apply` prints `backend_url` and `frontend_url` at the end: real public load balancer
+addresses. Open `frontend_url` in a browser and play, exactly like the local versions.
+
+One improvement over the local demo: images here are tagged with a hash of each app's own source
+code, not a static tag. That means a code change followed by `terraform apply` triggers a real,
+automatic Kubernetes rolling update, no manual `kubectl rollout restart` needed the way the local
+`kind` setup requires.
+
+Images are cross-compiled for `linux/amd64` via `docker buildx`: EKS nodes are x86_64, the local Mac
+builder is ARM64, so this is real cross-architecture emulation, not a formality. One side effect:
+pnpm has to stay below version 10 here. Newer pnpm versions bundle a Rust-based install core, and
+QEMU's user-mode emulation crashes that binary partway through `pnpm install` with a `tokio` I/O
+panic. A native build never hits this, which is why the local `kind` demo was fine and this one
+wasn't, until the Dockerfiles were pinned to `pnpm@9`.
+
+```bash
+terraform destroy
+```
+
+tears down the cluster, VPC, load balancers, and ECR repositories, stopping the billing.
 
 ## Out of scope
 

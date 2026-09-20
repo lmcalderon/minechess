@@ -10,9 +10,9 @@ build/
 coverage/
 .claude/
 .skills/
-terraform/.terraform/
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/terraform.tfvars
-terraform/tfplan
-terraform/*-config
+terraform*/.terraform/
+terraform*/*.tfstate
+terraform*/*.tfstate.*
+terraform*/terraform.tfvars
+terraform*/tfplan
+terraform*/*-config

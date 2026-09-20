@@ -2,7 +2,7 @@
 # (needs the root pnpm-workspace.yaml/lockfile, since this is a pnpm monorepo)
 
 FROM node:20-slim AS builder
-RUN npm install -g pnpm@12
+RUN npm install -g pnpm@9
 WORKDIR /workspace
 
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
